@@ -3,7 +3,7 @@ require 'parslet/convenience'
 
 class JspParser < Parslet::Parser
   def ds(start_delimiter, end_delimiter=start_delimiter)
-    str(start_delimiter) >> (str(end_delimiter).absent? >> any).repeat >> str(end_delimiter)
+    str(start_delimiter) >> (str(end_delimiter).absent? >> any).repeat.as(:value) >> str(end_delimiter)
   end
 
   rule(:s) { match('\\s').repeat }
@@ -13,7 +13,7 @@ class JspParser < Parslet::Parser
   rule(:id) { match('[A-Za-z_]') >> match('[A-Za-z0-9_]').repeat }
 
   rule(:parameters) { (parameter >> s).repeat }
-  rule(:parameter) { id.as(:name) >> s >> str('=') >> s >> quoted_string.as(:value) }
+  rule(:parameter) { id.as(:name) >> s >> str('=') >> s >> quoted_string }
 
   rule(:tag) { str('<%') >> (str('%>').absent? >> any).repeat.as(:content) >> str('%>') }
 

@@ -17,7 +17,7 @@ class TestJspParser < Minitest::Test
     assert_equal 2, elts.size
 
     assert_equal ({ :namespace => "jsp", :action_type => "include" }), elts[0]
-    assert_equal ({ :name => "file", :value => "'foo.jsp'" }), elts[1]
+    assert_equal ({ :name => "file", :value => "foo.jsp" }), elts[1]
   end
 
   def test_parses_jsp_includes
@@ -28,9 +28,9 @@ class TestJspParser < Minitest::Test
 
     assert_equal 4, elts.size
     assert_equal ({ :namespace => "jsp", :action_type => "include" }), elts[0]
-    assert_equal ({ :name => "file", :value => "'foo.jsp'" }), elts[1]
+    assert_equal ({ :name => "file", :value => "foo.jsp" }), elts[1]
     assert_equal ({ :namespace => "jsp", :action_type => "include" }), elts[2]
-    assert_equal ({ :name => "file", :value => "\"bar.jsp\"" }), elts[3]
+    assert_equal ({ :name => "file", :value => "bar.jsp" }), elts[3]
   end
 
 end
