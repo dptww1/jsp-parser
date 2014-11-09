@@ -2,8 +2,8 @@ require 'parslet'
 require 'parslet/convenience'
 
 class JspParser < Parslet::Parser
-  def ds(start_delimiter, end_delimiter=start_delimiter)
-    str(start_delimiter) >> (str(end_delimiter).absent? >> any).repeat.as(:value) >> str(end_delimiter)
+  def ds(start_delimiter, end_delimiter=start_delimiter, as=:value)
+    str(start_delimiter) >> (str(end_delimiter).absent? >> any).repeat.as(as) >> str(end_delimiter)
   end
 
   rule(:s) { match('\\s').repeat }
@@ -15,13 +15,15 @@ class JspParser < Parslet::Parser
   rule(:parameters) { (parameter >> s).repeat }
   rule(:parameter) { id.as(:name) >> s >> str('=') >> s >> quoted_string }
 
+  rule(:comment) { ds("<%--", "--%>", :comment) }
+
   rule(:tag) { str('<%') >> (str('%>').absent? >> any).repeat.as(:content) >> str('%>') }
 
   rule(:action) { str('<') >> id.as(:namespace) >> str(':') >> id.as(:action_type) >> s >> parameters >> str('/>') }
 
   rule(:other) { (str('<%').absent? >> str('<jsp:').absent? >> any) }
 
-  rule(:jsp_file) { (tag | action | other >> s).repeat }
+  rule(:jsp_file) { (comment | tag | action | other >> s).repeat }
 
   root :jsp_file
 end

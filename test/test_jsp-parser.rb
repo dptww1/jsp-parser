@@ -33,4 +33,17 @@ class TestJspParser < Minitest::Test
     assert_equal ({ :name => "file", :value => "bar.jsp" }), elts[3]
   end
 
+  def test_parses_comments
+    elts = JspParser.new.parse <<-TEST_PARSES_JSP_COMMENTS
+        <%--
+          <jsp:include file='foo.jsp'/> --%>
+        <%--
+           <jsp:include file="bar.jsp"/>
+          --%>"
+    TEST_PARSES_JSP_COMMENTS
+
+    assert_equal 2, elts.size
+    refute_nil elts[0][:comment]
+    refute_nil elts[1][:comment]
+  end
 end
