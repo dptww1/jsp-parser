@@ -21,9 +21,9 @@ class JspParser < Parslet::Parser
 
   rule(:action) { str('<') >> id.as(:namespace) >> str(':') >> id.as(:action_type) >> s >> parameters >> str('/>') }
 
-  rule(:other) { (str('<%').absent? >> str('<jsp:').absent? >> any) }
+  rule(:other) { (str('<%').absent? >> (str('<') >> id >> str(':')).absent? >> any) }
 
-  rule(:jsp_file) { (comment | tag | action | other >> s).repeat }
+  rule(:jsp_file) { (comment | tag.as(:element) | action.as(:element) | other >> s).repeat }
 
   root :jsp_file
 end
