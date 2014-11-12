@@ -15,8 +15,9 @@ class TestJspParser < Minitest::Test
     elts = JspParser.new.parse "<jsp:include file='foo.jsp'/>"
 
     assert_equal 1, elts.size
-    assert_equal ({ :namespace => "jsp", :action_type => "include" }), elts[0][:element][0]
-    assert_equal ({ :name => "file", :value => "foo.jsp" }), elts[0][:element][1]
+    assert_equal ({ :namespace => "jsp",
+                    :action_type => "include",
+                    :parameters => [:name => "file", :value => "foo.jsp"] }), elts[0][:element]
   end
 
   def test_parses_jsp_includes
@@ -26,10 +27,12 @@ class TestJspParser < Minitest::Test
     TEST_PARSES_JSP_INCLUDES
 
     assert_equal 2, elts.size
-    assert_equal ({ :namespace => "jsp", :action_type => "include" }), elts[0][:element][0]
-    assert_equal ({ :name => "file", :value => "foo.jsp" }), elts[0][:element][1]
-    assert_equal ({ :namespace => "jsp", :action_type => "include" }), elts[1][:element][0]
-    assert_equal ({ :name => "file", :value => "bar.jsp" }), elts[1][:element][1]
+    assert_equal ({ :namespace => "jsp",
+                    :action_type => "include",
+                    :parameters => [:name => "file", :value => "foo.jsp"] }), elts[0][:element]
+    assert_equal ({ :namespace => "jsp",
+                    :action_type => "include",
+                    :parameters => [:name => "file", :value => "bar.jsp"] }), elts[1][:element]
   end
 
   def test_parses_comments
@@ -53,7 +56,33 @@ class TestJspParser < Minitest::Test
 
     assert_equal 1, elts.size
     assert_equal 1, elts[0].size
-    assert_equal ({ :namespace => "cms", :action_type => "render" }), elts[0][:element][0]
-    assert_equal ({ :name => "value", :value => "${foo}" }), elts[0][:element][1]
+    assert_equal ({ :namespace => "cms",
+                    :action_type => "render",
+                    :parameters => [{ :name => "value", :value => "${foo}" }] }), elts[0][:element]
   end
+
+  def test_parses_nested_actions
+    elts = JspParser.new.parse_with_debug <<-TEST_PARSES_NESTED_ACTIONS
+      <cms:render value="${foo}">
+          <jsp:param name="bar" value="baz"/>
+      </cms:render>
+    TEST_PARSES_NESTED_ACTIONS
+
+    assert_equal ({ :namespace => "cms",
+                    :action_type => "render",
+                    :parameters => [{ :name => "value", :value => "${foo}" }],
+                    :content => [{
+                      :element => {
+                        :namespace => "jsp",
+                        :action_type => "param",
+                        :parameters => [{ :name => "name", :value => "bar" }, { :name => "value", :value => "baz" }]
+                      }}] }), elts[0][:element]
+  end
+
+#  def test_parses_complex_file
+#    str = File.read("#{File.dirname(__FILE__)}/files/layout.jsp") { |f| f.read }
+#    elts = JspParser.new.parse_with_debug(str)
+#    refute_nil elts
+#    refute_empty elts
+#  end
 end
