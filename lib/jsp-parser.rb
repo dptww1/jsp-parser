@@ -23,16 +23,16 @@ class JspParser < Parslet::Parser
   rule(:tag_plain)     { (str('%>').absent? >> any).repeat.as(:content) }
 
   rule(:action)              { action_empty | action_with_content }
-  rule(:action_empty)        { str('<') >> id.as(:namespace) >> str(':') >> id.as(:action_type) >> (s >> parameters).maybe >> s? >> str('/>') }
+  rule(:action_empty)        { str('<') >> (id.as(:namespace) >> str(':')).maybe >> id.as(:action_type) >> (s >> parameters).maybe >> s? >> str('/>') }
   rule(:action_with_content) {
       str('<') >> id.capture(:ns).as(:namespace) >> str(':') >> id.capture(:id).as(:action_type) >> (s >> parameters).maybe >> s? >> str('>') >>
-      s? >> jsp_file.as(:content) >> s? >>
-      str('</') >> dynamic { |src,ctx| str(ctx.captures[:ns]) >> str(':') >> str(ctx.captures[:id]) } >> s? >> str('>')
+      scope { jsp_file.maybe.as(:content) } >>
+      str('</') >> dynamic { |src,ctx| (str(ctx.captures[:ns]) >> str(':')).maybe >> str(ctx.captures[:id]) } >> s? >> str('>')
   }
 
-  rule(:other) { (str('<%').absent? >> str('</').absent? >> (str('<') >> id >> str(':')).absent? >> any) }
+  rule(:other) { (str('</').absent? >> str('<%').absent? >> (str('<') >> id >> str(':')).absent? >> any).repeat(1) }
 
 
-  rule(:jsp_file) { ((comment | tag.as(:element) | action.as(:element) | other) >> s?).repeat }
+  rule(:jsp_file) { (comment | tag.as(:element) | action.as(:element) | other | s).repeat }
   root :jsp_file
 end

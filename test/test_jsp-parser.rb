@@ -79,10 +79,44 @@ class TestJspParser < Minitest::Test
                       }}] }), elts[0][:element]
   end
 
-#  def test_parses_complex_file
-#    str = File.read("#{File.dirname(__FILE__)}/files/layout.jsp") { |f| f.read }
-#    elts = JspParser.new.parse_with_debug(str)
-#    refute_nil elts
-#    refute_empty elts
-#  end
+  def test_parses_doubly_nested_actions
+    elts = JspParser.new.parse_with_debug <<-TEST_PARSES_DOUBLY_NESTED_ACTIONS
+      <cms:render value="${foo}">
+          <jsp:param name="bar" value="baz">123</jsp:param>
+      </cms:render>
+    TEST_PARSES_DOUBLY_NESTED_ACTIONS
+
+    assert_equal ({ :namespace => "cms",
+                    :action_type => "render",
+                    :parameters => [{ :name => "value", :value => "${foo}" }],
+                    :content => [{
+                      :element => {
+                        :namespace => "jsp",
+                        :action_type => "param",
+                        :parameters => [{ :name => "name", :value => "bar" }, { :name => "value", :value => "baz" }],
+                        :content => "123"
+                      }}] }), elts[0][:element]
+  end
+
+  def test_parses_complex_file
+    #str = File.read("#{File.dirname(__FILE__)}/files/layout.jsp") { |f| f.read }
+    str = <<-TEST_PARSES_COMPLEX_FILE
+        <%@include file="/WEB-INF/jsp/common/tagLibs.jsp" %>
+
+        <jsp:include page="/WEB-INF/jsp/common/newStartPage.jsp"/>
+
+        <cms:layout class="package-grid feature">
+
+            <cms:render area="header">
+                <style>
+                    ${mainContent.inlineStyles}
+                </style>
+            </cms:render>
+        </cms:layout>
+    TEST_PARSES_COMPLEX_FILE
+
+    elts = JspParser.new.parse_with_debug(str)
+    refute_nil elts
+    refute_empty elts
+  end
 end
